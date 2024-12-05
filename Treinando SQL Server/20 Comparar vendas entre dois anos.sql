@@ -1,0 +1,26 @@
+
+USE AdventureWorksDW2022;
+
+--Compare as vendas totais de 2020 e 2021, mostrando o valor total vendido em cada ano e a variação percentual de um ano para o outro.
+
+WITH VendasPorAno(ANO,VALOR_TOTAL)
+AS
+(
+	SELECT
+		YEAR(OrderDate) AS ANO,
+		SUM(SalesAmount) AS VALOR_TOTAL
+	FROM FactInternetSales
+	WHERE 
+		YEAR(OrderDate) BETWEEN 2010 AND 2014
+	GROUP BY 
+		YEAR(OrderDate)
+)
+SELECT
+	V.ANO AS ANO,
+	V.VALOR_TOTAL AS 'TOTAL DE VENDAS',
+	LAG(V.VALOR_TOTAL,1) OVER(ORDER BY V.ANO) AS VENDAS_ANO_ANTERIOR,
+	CASE
+	WHEN LAG(V.VALOR_TOTAL,1) OVER(ORDER BY V.ANO) = 0 THEN NULL
+	ELSE ((V.VALOR_TOTAL - LAG(V.VALOR_TOTAL,1) OVER(ORDER BY V.ANO)) / LAG(V.VALOR_TOTAL, 1) OVER(ORDER BY V.ANO))* 100
+	END AS VARIAÇÃO_PERCENTUAL
+FROM VendasPorAno AS V
